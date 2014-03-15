@@ -7,6 +7,8 @@ project(map_mux)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  std_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -50,11 +52,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   ChangeMap.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -64,10 +65,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
@@ -80,8 +81,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES map_mux
-#  CATKIN_DEPENDS roscpp rospy
+#  LIBRARIES beginner_tutorials
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -97,19 +98,19 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(map_mux
-#   src/${PROJECT_NAME}/map_mux.cpp
+# add_library(beginner_tutorials
+#   src/${PROJECT_NAME}/beginner_tutorials.cpp
 # )
 
 ## Declare a cpp executable
-# add_executable(map_mux_node src/map_mux_node.cpp)
+# add_executable(beginner_tutorials_node src/beginner_tutorials_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(map_mux_node map_mux_generate_messages_cpp)
+# add_dependencies(beginner_tutorials_node beginner_tutorials_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(map_mux_node
+# target_link_libraries(beginner_tutorials_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -128,7 +129,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS map_mux map_mux_node
+# install(TARGETS beginner_tutorials beginner_tutorials_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -153,7 +154,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_map_mux.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_beginner_tutorials.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
