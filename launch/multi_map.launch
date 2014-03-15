@@ -1,0 +1,19 @@
+<launch>
+  <node name="talker1" pkg="map_mux" type="talker.py" /> 
+
+  <arg name="map_file" default="/nishome/aunwala/Downloads/3ne-real-new.yaml" />
+  <node name="map_server1" pkg="map_server" type="map_server" args="$(arg map_file)"> 
+    <remap from="map" to="map1"/>
+  </node>
+
+  <node name="map_server2" pkg="map_server" type="map_server" args="$(arg map_file)"> 
+    <remap from="map" to="map2"/>
+  </node>
+
+  <node name="map_server3" pkg="map_server" type="map_server" args="$(arg map_file)"> 
+    <remap from="map" to="map3"/>
+  </node>
+
+  <node name="map_mux" pkg="map_mux" type="map_mux.py" /> 
+
+</launch>
