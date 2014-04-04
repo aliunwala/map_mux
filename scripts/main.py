@@ -6,6 +6,7 @@ import time
 from std_msgs.msg import String
 from std_msgs.msg import Int16
 from nav_msgs.msg import OccupancyGrid
+from nav_msgs.srv import GetMap
 #from map_mux.srv import ChangeMap
 map1 = None
 map2 = None
@@ -30,6 +31,7 @@ def map_mux():
     rospy.Subscriber("map3", OccupancyGrid, addMap3)
     #rospy.Subscriber("change_map", Int16 , changeMap)
     s = rospy.Service('change_map', ChangeMap, changeMapfunc)
+    s = rospy.Service('static_map', GetMap, staticMapfunc)
     #s = rospy.Service('add_two_ints', AddTwoInts, handle_add_two_ints)
     topic = rospy.resolve_name("map")
     pub = rospy.Publisher("map", OccupancyGrid)
@@ -72,6 +74,9 @@ def changeMapfunc( data):
     global change_map
     change_map = data.data
     return 1
+def staticMapfunc( data):
+    global change_map
+    return change_map
 
 if __name__ == '__main__':
     try:
