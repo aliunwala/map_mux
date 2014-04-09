@@ -7,6 +7,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Int16
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
+from nav_msgs.msg import MapMetaData
 #from map_mux.srv import ChangeMap
 map1 = None
 map2 = None
@@ -35,6 +36,7 @@ def map_mux():
     #s = rospy.Service('add_two_ints', AddTwoInts, handle_add_two_ints)
     topic = rospy.resolve_name("map")
     pub = rospy.Publisher("map", OccupancyGrid)
+    pub_metadata = rospy.Publisher("map_metadata", MapMetaData)
     #pub = rospy.Publisher("map", Int16)
     r = rospy.Rate(10)
     old_change_map = 0;
@@ -46,12 +48,15 @@ def map_mux():
             if (change_map == 1 and map1 != None):
                 rospy.loginfo("changing to 1")
                 pub.publish(map1)
+                pub_metadata.publish(map1.info)
             if (change_map == 2 and map2 != None):
                 rospy.loginfo("changing to 2")
                 pub.publish(map2)
+                pub_metadata.publish(map2.info)
             if (change_map == 3 and map3 != None):
                 rospy.loginfo("changing to 3")
                 pub.publish(map3)
+                pub_metadata.publish(map3.info)
         old_change_map = change_map
         r.sleep()
     #rospy.spin()
