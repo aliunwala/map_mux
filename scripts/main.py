@@ -3,11 +3,15 @@
 from map_mux.srv import *
 import rospy
 import time
+import rosparam
+import rospkg
+import os
 from std_msgs.msg import String
 from std_msgs.msg import Int16
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
 from nav_msgs.msg import MapMetaData
+from geometry_msgs.msg import PoseWithCovarianceStamped
 #from map_mux.srv import ChangeMap
 map1 = None
 map2 = None
@@ -25,25 +29,70 @@ change_map = None
 
 # assume maps are loaded to topics map1, map2, map3
 
+initalPositionFloor2 = PoseWithCovarianceStamped()
+initalPositionFloor2.header.seq = 0
+#initalPositionFloor2.header.stamp.sec = 0
+#initalPositionFloor2.header.stamp.nsec = 0
+initalPositionFloor2.header.frame_id = "map"
+initalPositionFloor2.pose.pose.position.x = 24.46
+initalPositionFloor2.pose.pose.position.y = 29.62
+initalPositionFloor2.pose.pose.position.z = 0
+initalPositionFloor2.pose.pose.orientation.x = 0
+initalPositionFloor2.pose.pose.orientation.y = 0
+initalPositionFloor2.pose.pose.orientation.z = 0.76631578005
+initalPositionFloor2.pose.pose.orientation.w = 0.642464104247
+initalPositionFloor2.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891945200942]
+
+initalPositionFloor3 = PoseWithCovarianceStamped()
+initalPositionFloor3.header.seq = 0
+initalPositionFloor3.header.frame_id = "map"
+initalPositionFloor3.pose.pose.position.x = 32.85366
+initalPositionFloor3.pose.pose.position.y = 7.262574
+initalPositionFloor3.pose.pose.position.z = 0
+initalPositionFloor3.pose.pose.orientation.x = 0
+initalPositionFloor3.pose.pose.orientation.y = 0
+initalPositionFloor3.pose.pose.orientation.z = 0.704652683065
+initalPositionFloor3.pose.pose.orientation.w = 0.709552391476
+initalPositionFloor3.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891945200942]
+
+
 def map_mux():
+
     rospy.init_node("map_mux", anonymous=True)
+    # Topic Subscriber
     rospy.Subscriber("map1", OccupancyGrid, addMap1)
     rospy.Subscriber("map2", OccupancyGrid, addMap2)
     rospy.Subscriber("map3", OccupancyGrid, addMap3)
-    #rospy.Subscriber("change_map", Int16 , changeMap)
-    s = rospy.Service('change_map', ChangeMap, changeMapfunc)
-    s = rospy.Service('static_map', GetMap, staticMapfunc)
-    #s = rospy.Service('add_two_ints', AddTwoInts, handle_add_two_ints)
+    # Topic Publisher
     topic = rospy.resolve_name("map")
     pub = rospy.Publisher("map", OccupancyGrid)
+    topic = rospy.resolve_name("map_metadata")
     pub_metadata = rospy.Publisher("map_metadata", MapMetaData)
-    #pub = rospy.Publisher("map", Int16)
+    initialPosePub = rospy.Publisher("initialpose",  PoseWithCovarianceStamped)
+
+    # Service Servers
+    s = rospy.Service('change_map', ChangeMap, changeMapfunc)
+    s = rospy.Service('static_map', GetMap, staticMapfunc)
+    # Service Clients
+    service_floor_switch = rospy.ServiceProxy("floor_switch", ChangeMap)
+    rp = rospkg.RosPack()
+    try:
+        path = rp.get_path("map_mux") + "/src"
+    except rospkg.ResourceNotFound:
+        print "package not found"
+    print path
+    print "waiting for floor_switch to come up"
+    #rospy.wait_for_service("floor_switch")
+
+
     r = rospy.Rate(10)
-    old_change_map = 0;
+    old_change_map = 0
 
     while not rospy.is_shutdown():
         if( map1 == None  and map2 == None and map3 == None):
             print "you need to provide 3 maps on topics map1 map2 map3 from a launch file."
+
+
         if (change_map != old_change_map):
             if (change_map == 1 and map1 != None):
                 rospy.loginfo("changing to 1")
@@ -53,26 +102,55 @@ def map_mux():
                 rospy.loginfo("changing to 2")
                 pub.publish(map2)
                 pub_metadata.publish(map2.info)
+                #print str(type(initalPositionFloor2))
+                initialPosePub.publish(initalPositionFloor2)
+                try:
+                    rosparam.set_param("/segbot_logical_navigator/door_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/atrium_doors.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/location_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/atrium_locations.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/object_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/atrium_objects.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/map_file",
+                            rp.get_path("map_mux") + "/maps/atrium_with_elevators.yaml")
+
+                    resp_floor_switch = service_floor_switch(change_map)
+                except rospy.ServiceException:
+                    print "floor switch service call failed"
+
             if (change_map == 3 and map3 != None):
                 rospy.loginfo("changing to 3")
                 pub.publish(map3)
                 pub_metadata.publish(map3.info)
+                initialPosePub.publish(initalPositionFloor3)
+                try:
+                    rosparam.set_param("/segbot_logical_navigator/door_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/3ne_doors.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/location_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/3ne_locations.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/object_file",
+                            rp.get_path("bwi_coffee") + "/config/multi_floor/3ne_objects.yaml")
+                    rosparam.set_param("/segbot_logical_navigator/map_file",
+                            rp.get_path("map_mux") + "/maps/map_whole2_with_elevators.yaml")
+
+                    resp_floor_switch = service_floor_switch(change_map)
+                except rospy.ServiceException:
+                    print "floor switch service call failed"
         old_change_map = change_map
-        r.sleep()
-    #rospy.spin()
+        #rospy.sleep(1)
+        #rospy.spin once()
+        #r.sleep()
+        #rospy.spin()
 
 
 def addMap1(data):
     #rospy.loginfo( type(data.data))
-    rospy.loginfo("1")
     global map1
     map1 = data
 def addMap2(data):
-    rospy.loginfo("2" )
     global map2
     map2 = data
 def addMap3(data):
-    rospy.loginfo("3" )
     global map3
     map3 = data
 def changeMapfunc( data):
